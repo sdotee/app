@@ -1,0 +1,197 @@
+name: Release Linux
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag (e.g., v0.1.0)'
+        required: true
+
+env:
+  CARGO_TERM_COLOR: always
+  APP_ID: ee.s.app
+  APP_NAME: see
+
+jobs:
+  build-flatpak:
+    name: Build Flatpak (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-47
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: ${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.arch }}.flatpak
+          manifest-path: linux/packaging/flatpak/${{ env.APP_ID }}.yml
+          cache-key: flatpak-builder-${{ matrix.arch }}-${{ github.sha }}
+
+      - name: Upload Flatpak
+        uses: actions/upload-artifact@v6
+        with:
+          name: flatpak-${{ matrix.arch }}
+          path: ${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.arch }}.flatpak
+
+  build-deb:
+    name: Build Deb Package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-dev \
+            libadwaita-1-dev \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libgdk-pixbuf-2.0-dev \
+            libglib2.0-dev
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: linux
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Build release binary
+        working-directory: linux
+        run: cargo build --release
+
+      - name: Build deb package
+        working-directory: linux
+        run: cargo deb --no-build
+
+      - name: Rename deb package
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mv linux/target/debian/*.deb ${{ env.APP_NAME }}_${VERSION}_${{ matrix.arch }}.deb
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v6
+        with:
+          name: deb-${{ matrix.arch }}
+          path: ${{ env.APP_NAME }}_*_${{ matrix.arch }}.deb
+
+  build-rpm:
+    name: Build RPM Package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    container:
+      image: fedora:40
+    steps:
+      - name: Install system dependencies
+        run: |
+          dnf install -y \
+            git \
+            gcc \
+            gtk4-devel \
+            libadwaita-devel \
+            cairo-devel \
+            pango-devel \
+            gdk-pixbuf2-devel \
+            glib2-devel \
+            rpm-build
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: linux
+
+      - name: Install cargo-generate-rpm
+        run: cargo install cargo-generate-rpm
+
+      - name: Build release binary
+        working-directory: linux
+        run: cargo build --release
+
+      - name: Build RPM package
+        working-directory: linux
+        run: cargo generate-rpm
+
+      - name: Rename RPM package
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mv linux/target/generate-rpm/*.rpm ${{ env.APP_NAME }}-${VERSION}-1.${{ matrix.arch }}.rpm
+
+      - name: Upload RPM
+        uses: actions/upload-artifact@v6
+        with:
+          name: rpm-${{ matrix.arch }}
+          path: ${{ env.APP_NAME }}-*-1.${{ matrix.arch }}.rpm
+
+  release:
+    name: Create Release
+    needs: [build-flatpak, build-deb, build-rpm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp artifacts/flatpak-*/*.flatpak release/
+          cp artifacts/deb-*/*.deb release/
+          cp artifacts/rpm-*/*.rpm release/
+          cp linux/packaging/PKGBUILD release/
+          ls -la release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: S.EE Desktop ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

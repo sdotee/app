@@ -28,3 +28,35 @@ env_logger = "0.11"
 
 [build-dependencies]
 glib-build-tools = "0.20"
+
+[package.metadata.deb]
+maintainer = "S.EE Team <support@s.ee>"
+copyright = "2024-2026, S.EE Team"
+license-file = ["../LICENSE", "0"]
+extended-description = """A native GNOME desktop client for S.EE - URL shortening, text sharing, and file hosting service.
+Features include URL shortening, text sharing, file uploads, QR code generation, and local history tracking."""
+section = "utils"
+priority = "optional"
+depends = "$auto"
+assets = [
+    ["target/release/see", "usr/bin/", "755"],
+    ["data/ee.s.app.desktop", "usr/share/applications/", "644"],
+    ["data/ee.s.app.metainfo.xml", "usr/share/metainfo/", "644"],
+    ["data/icons/hicolor/scalable/apps/ee.s.app.svg", "usr/share/icons/hicolor/scalable/apps/", "644"],
+    ["data/ee.s.app.gschema.xml", "usr/share/glib-2.0/schemas/", "644"],
+]
+postinst-script = "packaging/deb/postinst"
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/see", dest = "/usr/bin/see", mode = "755" },
+    { source = "data/ee.s.app.desktop", dest = "/usr/share/applications/ee.s.app.desktop", mode = "644" },
+    { source = "data/ee.s.app.metainfo.xml", dest = "/usr/share/metainfo/ee.s.app.metainfo.xml", mode = "644" },
+    { source = "data/icons/hicolor/scalable/apps/ee.s.app.svg", dest = "/usr/share/icons/hicolor/scalable/apps/ee.s.app.svg", mode = "644" },
+    { source = "data/ee.s.app.gschema.xml", dest = "/usr/share/glib-2.0/schemas/ee.s.app.gschema.xml", mode = "644" },
+]
+post_install_script = "packaging/rpm/post_install.sh"
+
+[package.metadata.generate-rpm.requires]
+gtk4 = ">= 4.14"
+libadwaita = ">= 1.5"
