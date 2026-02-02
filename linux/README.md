@@ -242,7 +242,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Website**: [s.ee](https://s.ee)
 - **Issues**: [GitHub Issues](https://github.com/sdotee/desktop/issues)
-- **API Documentation**: [S.EE API Docs](https://s.ee/docs/api)
+- **API Documentation**: [S.EE API Docs](https://s.ee/docs/developers/api/)
 
 ## Credits
 

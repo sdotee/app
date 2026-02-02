@@ -4,5 +4,5 @@ contact_links:
     url: https://s.ee
     about: Visit S.EE for account and API key management
   - name: API Documentation
-    url: https://s.ee/docs/api
+    url: https://s.ee/docs/developers/api/
     about: S.EE API documentation
