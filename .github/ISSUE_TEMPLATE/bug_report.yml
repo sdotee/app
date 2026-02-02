@@ -52,14 +52,20 @@ body:
         - Linux (rpm)
         - Linux (AUR)
         - Linux (Build from source)
+        - macOS (DMG)
+        - macOS (Mac App Store)
+        - macOS (Build from source)
+        - Windows (Installer)
+        - Windows (Microsoft Store)
+        - Windows (Build from source)
     validations:
       required: true
 
   - type: input
-    id: distro
+    id: os-version
     attributes:
-      label: Linux Distribution
-      placeholder: e.g., Ubuntu 24.04, Fedora 40, Arch Linux
+      label: OS Version
+      placeholder: e.g., Ubuntu 24.04, macOS 15.2, Windows 11 23H2
     validations:
       required: true
 
