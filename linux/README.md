@@ -23,41 +23,87 @@ A native GNOME desktop client for [S.EE](https://s.ee) - URL shortening, text sh
 
 ## Installation
 
-### Requirements
+### Arch Linux (AUR)
+
+```bash
+# Using yay (prebuilt binary, recommended)
+yay -S see-desktop-bin
+
+# Or build from source
+yay -S see-desktop
+```
+
+- [see-desktop](https://aur.archlinux.org/packages/see-desktop) - Build from source
+- [see-desktop-bin](https://aur.archlinux.org/packages/see-desktop-bin) - Prebuilt binary
+
+### Ubuntu/Debian (.deb)
+
+Download from [Releases](https://github.com/sdotee/desktop/releases):
+
+```bash
+# x86_64
+wget https://github.com/sdotee/desktop/releases/latest/download/see_0.1.0_amd64.deb
+sudo apt install ./see_0.1.0_amd64.deb
+
+# ARM64
+wget https://github.com/sdotee/desktop/releases/latest/download/see_0.1.0_arm64.deb
+sudo apt install ./see_0.1.0_arm64.deb
+```
+
+### Fedora (.rpm)
+
+Download from [Releases](https://github.com/sdotee/desktop/releases):
+
+```bash
+# x86_64
+wget https://github.com/sdotee/desktop/releases/latest/download/see-0.1.0-1.x86_64.rpm
+sudo dnf install ./see-0.1.0-1.x86_64.rpm
+
+# ARM64
+wget https://github.com/sdotee/desktop/releases/latest/download/see-0.1.0-1.aarch64.rpm
+sudo dnf install ./see-0.1.0-1.aarch64.rpm
+```
+
+### Flatpak
+
+Download from [Releases](https://github.com/sdotee/desktop/releases):
+
+```bash
+wget https://github.com/sdotee/desktop/releases/latest/download/see-v0.1.0-x86_64.flatpak
+flatpak install ./see-v0.1.0-x86_64.flatpak
+```
+
+### Build from Source
+
+#### Requirements
 
 - GTK 4.14+
 - libadwaita 1.5+
 - Rust 1.85+ (2024 edition)
 
-### Dependencies (Arch Linux)
+#### Dependencies
 
+**Arch Linux:**
 ```bash
 sudo pacman -S gtk4 libadwaita cairo pango gdk-pixbuf2
 ```
 
-### Dependencies (Ubuntu/Debian)
-
+**Ubuntu/Debian:**
 ```bash
-sudo apt install libgtk-4-dev libadwaita-1-dev libcairo2-dev libpango1.0-dev
+sudo apt install libgtk-4-dev libadwaita-1-dev libcairo2-dev libpango1.0-dev libssl-dev pkg-config
 ```
 
-### Dependencies (Fedora)
-
+**Fedora:**
 ```bash
-sudo dnf install gtk4-devel libadwaita-devel cairo-devel pango-devel
+sudo dnf install gtk4-devel libadwaita-devel cairo-devel pango-devel openssl-devel
 ```
 
-### Build from Source
+#### Build
 
 ```bash
-# Clone the repository
 git clone https://github.com/sdotee/desktop.git
 cd desktop/linux
-
-# Build
 cargo build --release
-
-# Run
 ./target/release/see
 ```
 

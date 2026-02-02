@@ -19,18 +19,34 @@ Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, 
 - **Local History** - Track all your created links, texts, and files
 - **Multiple Domains** - Choose from available domains for each service
 
-## Quick Start
+## Installation
 
 ### Linux
 
+**Arch Linux (AUR):**
 ```bash
-git clone https://github.com/sdotee/desktop.git
-cd desktop/linux
-cargo build --release
-./target/release/see
+yay -S see-desktop-bin
 ```
 
-See [linux/README.md](./linux/README.md) for detailed instructions.
+**Ubuntu/Debian:**
+```bash
+wget https://github.com/sdotee/desktop/releases/latest/download/see_0.1.0_amd64.deb
+sudo apt install ./see_0.1.0_amd64.deb
+```
+
+**Fedora:**
+```bash
+wget https://github.com/sdotee/desktop/releases/latest/download/see-0.1.0-1.x86_64.rpm
+sudo dnf install ./see-0.1.0-1.x86_64.rpm
+```
+
+**Flatpak:**
+```bash
+wget https://github.com/sdotee/desktop/releases/latest/download/see-v0.1.0-x86_64.flatpak
+flatpak install ./see-v0.1.0-x86_64.flatpak
+```
+
+See [linux/README.md](./linux/README.md) for more options (ARM64, build from source).
 
 ## Getting an API Key
 
