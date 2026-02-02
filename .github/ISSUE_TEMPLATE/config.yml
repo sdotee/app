@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: S.EE Website
+    url: https://s.ee
+    about: Visit S.EE for account and API key management
+  - name: API Documentation
+    url: https://s.ee/docs/api
+    about: S.EE API documentation
