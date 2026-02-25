@@ -62,6 +62,7 @@ struct FileUploadView: View {
     #if os(iOS)
     @State private var showPhotoPicker = false
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showCamera = false
     #endif
 
     private var fileTotalPages: Int { Pagination.totalPages(for: files.count) }
@@ -167,6 +168,9 @@ struct FileUploadView: View {
                 selectedFileIDs.removeAll()
                 showBatchLinks = false
             }
+            #if os(iOS)
+            .presentationDetents([.medium, .large])
+            #endif
         }
         .fileImporter(
             isPresented: $showFilePicker,
@@ -181,6 +185,14 @@ struct FileUploadView: View {
             if let item = newValue {
                 handlePhotoPicker(item)
             }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraView(onCapture: { image in
+                handleCameraCapture(image)
+            }, onVideoCapture: { url in
+                handleVideoCapture(url)
+            })
+            .ignoresSafeArea()
         }
         #endif
         .toast(message: $viewModel.successMessage)
@@ -210,26 +222,30 @@ struct FileUploadView: View {
         #else
         VStack(spacing: 12) {
             if viewModel.isLoading {
-                ProgressView(value: viewModel.uploadProgress) {
-                    Text(String(localized: "Uploading..."))
+                VStack(spacing: 8) {
+                    ProgressView(value: viewModel.uploadProgress)
+                        .tint(.accentColor)
+                    Text(String(localized: "Uploading... \(Int(viewModel.uploadProgress * 100))%"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 .padding()
             } else {
-                HStack(spacing: 16) {
-                    Button(action: { showFilePicker = true }) {
-                        Label(String(localized: "Choose File"), systemImage: "doc")
+                HStack(spacing: 24) {
+                    UploadActionButton(title: String(localized: "File"), icon: "doc", tint: .accentColor) {
+                        showFilePicker = true
                     }
-                    .buttonStyle(.borderedProminent)
-
-                    Button(action: { showPhotoPicker = true }) {
-                        Label(String(localized: "Choose Photo"), systemImage: "photo")
+                    UploadActionButton(title: String(localized: "Photo"), icon: "photo", tint: .orange) {
+                        showPhotoPicker = true
                     }
-                    .buttonStyle(.bordered)
-
-                    Button(action: handlePasteUpload) {
-                        Label(String(localized: "Paste"), systemImage: "doc.on.clipboard")
+                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                        UploadActionButton(title: String(localized: "Camera"), icon: "camera", tint: .green) {
+                            showCamera = true
+                        }
                     }
-                    .buttonStyle(.bordered)
+                    UploadActionButton(title: String(localized: "Paste"), icon: "doc.on.clipboard", tint: .purple) {
+                        handlePasteUpload()
+                    }
                 }
             }
         }
@@ -292,11 +308,56 @@ struct FileUploadView: View {
     #if os(iOS)
     private func handlePhotoPicker(_ item: PhotosPickerItem) {
         Task {
-            guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-            let (converted, filename) = convertForUpload(data)
-            let _ = await viewModel.uploadFile(data: converted, filename: filename, context: modelContext)
+            // Try loading as UIImage first for reliable HEIC→JPG conversion
+            if let image = try? await item.loadTransferable(type: ImageTransferable.self) {
+                let (data, filename) = convertUIImageForUpload(image.image)
+                let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
+            } else if let data = try? await item.loadTransferable(type: Data.self) {
+                // Fallback to raw data for non-image files
+                let (converted, filename) = convertForUpload(data)
+                let _ = await viewModel.uploadFile(data: converted, filename: filename, context: modelContext)
+            }
             selectedPhoto = nil
         }
+    }
+
+    private func handleCameraCapture(_ image: UIImage) {
+        Task {
+            let (data, filename) = convertUIImageForUpload(image)
+            let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
+        }
+    }
+
+    private func handleVideoCapture(_ url: URL) {
+        Task {
+            guard let data = try? Data(contentsOf: url) else {
+                viewModel.errorMessage = String(localized: "Failed to read video file")
+                return
+            }
+            let ext = url.pathExtension.isEmpty ? "mov" : url.pathExtension
+            let df = DateFormatter()
+            df.dateFormat = "yyyyMMdd-HHmmss"
+            let filename = "video-\(df.string(from: .now)).\(ext)"
+            let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
+            // Clean up temp file
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+
+    /// Convert a UIImage to JPG for maximum compatibility.
+    private func convertUIImageForUpload(_ image: UIImage) -> (Data, String) {
+        let df = DateFormatter()
+        df.dateFormat = "yyyyMMdd-HHmmss"
+        let timestamp = df.string(from: .now)
+
+        if let jpegData = image.jpegData(compressionQuality: 0.9) {
+            return (jpegData, "photo-\(timestamp).jpg")
+        }
+        // Fallback to PNG if JPEG fails
+        if let pngData = image.pngData() {
+            return (pngData, "photo-\(timestamp).png")
+        }
+        return (Data(), "photo-\(timestamp).jpg")
     }
     #endif
 }
@@ -355,7 +416,7 @@ struct UploadedFileRow: View {
     private var sizeInfo: String {
         var parts = [file.size.formattedFileSize]
         if let w = file.width, let h = file.height {
-            parts.append("\(w)x\(h)")
+            parts.append("\(w)×\(h)")
         }
         return parts.joined(separator: " · ")
     }
@@ -372,12 +433,12 @@ struct UploadedFileRow: View {
         HStack(spacing: 12) {
             // Thumbnail
             if file.isImage {
-                CachedThumbnailView(originalURL: file.url, size: 40)
+                CachedThumbnailView(originalURL: file.url, size: 44)
             } else {
                 Image(systemName: "doc.fill")
                     .font(.title3)
                     .foregroundStyle(.secondary)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -387,11 +448,11 @@ struct UploadedFileRow: View {
                         .lineLimit(1)
                     Spacer()
                     Text(file.createdAt.relativeFormatted)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
 
-                HStack {
+                HStack(spacing: 4) {
                     if isClickableURL, let url = URL(string: displayedLink) {
                         Link(displayedLink, destination: url)
                             .font(.caption)
@@ -405,13 +466,11 @@ struct UploadedFileRow: View {
                     }
 
                     CopyButton(text: displayedLink)
-
-                    Spacer()
-
-                    Text(sizeInfo)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
+
+                Text(sizeInfo)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.vertical, 4)
@@ -492,6 +551,7 @@ struct UploadedFileRow: View {
 // MARK: - Batch Links View
 
 struct BatchLinksView: View {
+    @Environment(\.dismiss) private var dismiss
     let files: [UploadedFile]
     let linkDisplayType: LinkDisplayType
     let onDismiss: () -> Void
@@ -510,71 +570,166 @@ struct BatchLinksView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text(String(localized: "Batch Copy Links"))
-                    .font(.headline)
-                Spacer()
-                Text(String(localized: "\(files.count) files selected"))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-
-            Divider()
-
-            // Format picker
-            HStack {
-                Text(String(localized: "Format"))
-                    .font(.subheadline.weight(.medium))
-                Picker("", selection: $batchType) {
-                    ForEach(LinkDisplayType.allCases) { type in
-                        Text(type.rawValue).tag(type)
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Format picker
+                HStack {
+                    Text(String(localized: "Format"))
+                        .font(.subheadline.weight(.medium))
+                    Picker("", selection: $batchType) {
+                        ForEach(LinkDisplayType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
                     }
+                    .labelsHidden()
                 }
-                .labelsHidden()
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
-            // Links preview
-            ScrollView {
-                Text(batchText)
-                    .font(.caption.monospaced())
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-            }
-            .background(Color.secondary.opacity(0.05))
-
-            Divider()
-
-            // Actions
-            HStack {
-                Button(String(localized: "Clear Selection"), role: .destructive) {
-                    onDismiss()
+                // Links preview
+                ScrollView {
+                    Text(batchText)
+                        .font(.caption.monospaced())
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
                 }
+                .background(Color.secondary.opacity(0.05))
 
-                Spacer()
+                Divider()
 
-                Button(action: {
-                    ClipboardService.copy(batchText)
-                    copied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        copied = false
+                // Actions
+                HStack {
+                    Button(String(localized: "Clear Selection"), role: .destructive) {
+                        onDismiss()
                     }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                            .contentTransition(.symbolEffect(.replace))
-                        Text(copied ? String(localized: "Copied!") : String(localized: "Copy All"))
+
+                    Spacer()
+
+                    Button(action: {
+                        ClipboardService.copy(batchText)
+                        copied = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            copied = false
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                                .contentTransition(.symbolEffect(.replace))
+                            Text(copied ? String(localized: "Copied!") : String(localized: "Copy All"))
+                        }
                     }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
+                .padding()
             }
-            .padding()
+            .navigationTitle(String(localized: "Batch Copy Links"))
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "Done")) { dismiss() }
+                }
+            }
+            #if os(macOS)
+            .frame(minWidth: 500, minHeight: 400)
+            #endif
         }
-        .frame(minWidth: 500, minHeight: 400)
     }
 }
+
+// MARK: - iOS Camera & Image Helpers
+
+#if os(iOS)
+/// Compact icon + label button for the iOS upload area.
+struct UploadActionButton: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .frame(width: 52, height: 52)
+                    .background(tint.opacity(0.12), in: Circle())
+                    .foregroundStyle(tint)
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Transferable wrapper to load UIImage from PhotosPicker.
+struct ImageTransferable: Transferable {
+    let image: UIImage
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(importedContentType: .image) { data in
+            guard let image = UIImage(data: data) else {
+                throw TransferError.importFailed
+            }
+            return ImageTransferable(image: image)
+        }
+    }
+
+    enum TransferError: Error {
+        case importFailed
+    }
+}
+
+/// UIImagePickerController wrapper for camera capture (photo + video).
+struct CameraView: UIViewControllerRepresentable {
+    let onCapture: (UIImage) -> Void
+    let onVideoCapture: (URL) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.mediaTypes = [UTType.image.identifier, UTType.movie.identifier]
+        picker.videoQuality = .typeHigh
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onCapture: onCapture, onVideoCapture: onVideoCapture, dismiss: dismiss)
+    }
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let onCapture: (UIImage) -> Void
+        let onVideoCapture: (URL) -> Void
+        let dismiss: DismissAction
+
+        init(onCapture: @escaping (UIImage) -> Void, onVideoCapture: @escaping (URL) -> Void, dismiss: DismissAction) {
+            self.onCapture = onCapture
+            self.onVideoCapture = onVideoCapture
+            self.dismiss = dismiss
+        }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let mediaType = info[.mediaType] as? String {
+                if mediaType == UTType.movie.identifier, let url = info[.mediaURL] as? URL {
+                    onVideoCapture(url)
+                } else if let image = info[.originalImage] as? UIImage {
+                    onCapture(image)
+                }
+            }
+            dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            dismiss()
+        }
+    }
+}
+#endif

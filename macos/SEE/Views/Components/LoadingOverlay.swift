@@ -43,8 +43,12 @@ struct ToastModifier: ViewModifier {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-                    .shadow(radius: 4)
+                    .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+                    #if os(iOS)
+                    .padding(.bottom, 60)
+                    #else
                     .padding(.bottom, 20)
+                    #endif
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onAppear {
                         Task { @MainActor in

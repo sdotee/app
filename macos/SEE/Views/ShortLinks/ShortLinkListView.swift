@@ -68,9 +68,15 @@ struct ShortLinkListView: View {
         }
         .sheet(isPresented: $showingCreate) {
             CreateShortLinkView(viewModel: viewModel)
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
         }
         .sheet(item: $linkToEdit) { link in
             CreateShortLinkView(viewModel: viewModel, editingLink: link)
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
         }
         .alert(String(localized: "Delete Short Link?"), isPresented: .init(
             get: { linkToDelete != nil },
@@ -126,6 +132,9 @@ struct ShortLinkRow: View {
         )
         .sheet(isPresented: $showStats) {
             LinkStatsView(link: link)
+                #if os(iOS)
+                .presentationDetents([.medium, .large])
+                #endif
         }
     }
 }

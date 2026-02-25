@@ -66,9 +66,15 @@ struct TextShareListView: View {
         }
         .sheet(isPresented: $showingCreate) {
             CreateTextShareView(viewModel: viewModel)
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
         }
         .sheet(item: $shareToEdit) { share in
             CreateTextShareView(viewModel: viewModel, editingShare: share)
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
         }
         .alert(String(localized: "Delete Text Share?"), isPresented: .init(
             get: { shareToDelete != nil },

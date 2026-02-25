@@ -45,6 +45,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
+                #if os(macOS)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "Base URL"))
                         .font(.subheadline.weight(.medium))
@@ -83,6 +84,34 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                #else
+                TextField(String(localized: "Base URL"), text: $baseURL)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .onChange(of: baseURL) {
+                        UserDefaults.standard.set(baseURL, forKey: Constants.baseURLKey)
+                    }
+
+                SecureField(String(localized: "API Key"), text: $apiKey)
+
+                Button(String(localized: "Paste from Clipboard")) {
+                    if let clipboard = ClipboardService.getString() {
+                        apiKey = clipboard
+                    }
+                }
+
+                Button(action: validateKey) {
+                    HStack {
+                        Text(String(localized: "Verify API Key"))
+                        Spacer()
+                        if isValidating {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+                }
+                .disabled(apiKey.isEmpty || isValidating)
+                #endif
 
                 if let validationResult {
                     switch validationResult {

@@ -151,7 +151,7 @@ enum ImageConverter {
         let rep = NSBitmapImageRep(cgImage: cgImage)
         return rep.representation(using: .png, properties: [:])
         #else
-        guard let uiImage = UIImage(cgImage: cgImage) else { return nil }
+        let uiImage = UIImage(cgImage: cgImage)
         return uiImage.pngData()
         #endif
     }

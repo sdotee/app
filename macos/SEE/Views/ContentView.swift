@@ -119,72 +119,82 @@ struct OnboardingView: View {
     @State private var showSuccess = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer(minLength: 40)
 
-            Image(systemName: "link.circle.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(Color.accentColor)
+                Image(systemName: "link.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(Color.accentColor)
 
-            Text("S.EE")
-                .font(.largeTitle.bold())
+                Text("S.EE")
+                    .font(.largeTitle.bold())
 
-            Text(String(localized: "URL Shortener, Text Sharing & File Hosting"))
-                .font(.headline)
-                .foregroundStyle(.secondary)
+                Text(String(localized: "URL Shortener, Text Sharing & File Hosting"))
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
 
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "Base URL"))
-                        .font(.subheadline.weight(.medium))
-                    TextField("https://s.ee/api/v1/", text: $baseURL)
-                        .textFieldStyle(.roundedBorder)
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "API Key"))
-                        .font(.subheadline.weight(.medium))
-                    HStack {
-                        SecureField(String(localized: "Enter your API key"), text: $apiKey)
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(String(localized: "Base URL"))
+                            .font(.subheadline.weight(.medium))
+                        TextField("https://s.ee/api/v1/", text: $baseURL)
                             .textFieldStyle(.roundedBorder)
-                        Button(String(localized: "Paste")) {
-                            if let clipboard = ClipboardService.getString() {
-                                apiKey = clipboard
+                            #if os(iOS)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            #endif
+                    }
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(String(localized: "API Key"))
+                            .font(.subheadline.weight(.medium))
+                        HStack {
+                            SecureField(String(localized: "Enter your API key"), text: $apiKey)
+                                .textFieldStyle(.roundedBorder)
+                            Button(String(localized: "Paste")) {
+                                if let clipboard = ClipboardService.getString() {
+                                    apiKey = clipboard
+                                }
                             }
                         }
                     }
-                }
 
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
 
-                if showSuccess {
-                    Label(String(localized: "API key verified successfully!"), systemImage: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.green)
+                    if showSuccess {
+                        Label(String(localized: "API key verified successfully!"), systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    }
                 }
+                .frame(maxWidth: 400)
+
+                Button(action: validate) {
+                    if isValidating {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Text(String(localized: "Verify & Continue"))
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(apiKey.isEmpty || isValidating)
+                .keyboardShortcut(.defaultAction)
+
+                Spacer(minLength: 40)
             }
-            .frame(maxWidth: 400)
-
-            Button(action: validate) {
-                if isValidating {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Text(String(localized: "Verify & Continue"))
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(apiKey.isEmpty || isValidating)
-            .keyboardShortcut(.defaultAction)
-
-            Spacer()
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 24)
         }
-        .padding(40)
+        #if os(macOS)
         .frame(minWidth: 500, minHeight: 400)
+        #endif
     }
 
     private func validate() {

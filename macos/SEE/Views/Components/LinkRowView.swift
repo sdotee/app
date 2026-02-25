@@ -35,15 +35,17 @@ struct LinkRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Top row: link + date
-            HStack(alignment: .center) {
+            // Top row: link + copy + badges
+            HStack(alignment: .center, spacing: 6) {
                 if let url = URL(string: shortURL) {
                     Link(shortURL, destination: url)
                         .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
                 } else {
                     Text(shortURL)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.accentColor)
+                        .lineLimit(1)
                 }
 
                 CopyButton(text: shortURL, font: .caption)
@@ -59,7 +61,7 @@ struct LinkRowView: View {
                 }
 
                 Text(date.relativeFormatted)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
 

@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 // MARK: - HTTP Method
 
@@ -281,7 +282,7 @@ actor APIClient {
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
         defer { session.invalidateAndCancel() }
 
-        let (data, response) = try await session.upload(for: request, from: body, delegate: delegate)
+        let (data, response) = try await session.upload(for: request, from: body)
         let apiResponse: APIResponse<UploadFileResponse> = try handleResponse(data: data, response: response)
         guard let fileResponse = apiResponse.data else {
             throw APIError.decodingError(String(localized: "Missing response data"))
@@ -342,6 +343,7 @@ actor APIClient {
 
 final class UploadProgressDelegate: NSObject, URLSessionTaskDelegate, URLSessionDataDelegate, Sendable {
     private let progressHandler: @Sendable (Double) -> Void
+    private let lastReportedProgress = OSAllocatedUnfairLock(initialState: 0.0)
 
     init(progressHandler: @Sendable @escaping (Double) -> Void) {
         self.progressHandler = progressHandler
@@ -355,7 +357,17 @@ final class UploadProgressDelegate: NSObject, URLSessionTaskDelegate, URLSession
         totalBytesExpectedToSend: Int64
     ) {
         let progress = Double(totalBytesSent) / Double(totalBytesExpectedToSend)
-        progressHandler(progress)
+        // Throttle updates: only report when progress changes by >= 1% or reaches 100%
+        let shouldReport = lastReportedProgress.withLock { last -> Bool in
+            if progress >= 1.0 || progress - last >= 0.01 {
+                last = progress
+                return true
+            }
+            return false
+        }
+        if shouldReport {
+            progressHandler(progress)
+        }
     }
 }
 
