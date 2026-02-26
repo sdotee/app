@@ -21,7 +21,7 @@
         {
           "glass" : true,
           "image-name" : "see 2.png",
-          "name" : "see 2",
+          "name" : "see",
           "position" : {
             "scale" : 0.9,
             "translation-in-points" : [
