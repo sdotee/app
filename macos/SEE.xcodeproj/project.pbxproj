@@ -10,7 +10,7 @@
 		8E0E2A022F4EC7D800C5259F /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0E29EA2F4EC7D800C5259F /* MenuBarView.swift */; };
 		8E0E2A1C2F4EDA3C00C5259F /* WebP in Frameworks */ = {isa = PBXBuildFile; productRef = 8E0E2A1B2F4EDA3C00C5259F /* WebP */; };
 		8EF8AE4F2F50404F0094A32D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8EF8AE4E2F50404F0094A32D /* Assets.xcassets */; };
-		BF062F882F50C44F00122488 /* seeicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF062F872F50C44F00122488 /* seeicon.icon */; };
+		BF062F8A2F50C4F300122488 /* seeicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF062F892F50C4F300122488 /* seeicon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,7 +36,7 @@
 		8E8F88162F4EC789003D73F1 /* SEETests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SEETests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E8F88202F4EC789003D73F1 /* SEEUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SEEUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EF8AE4E2F50404F0094A32D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		BF062F872F50C44F00122488 /* seeicon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = seeicon.icon; sourceTree = "<group>"; };
+		BF062F892F50C4F300122488 /* seeicon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = seeicon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -92,7 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				8EF8AE4E2F50404F0094A32D /* Assets.xcassets */,
-				BF062F872F50C44F00122488 /* seeicon.icon */,
+				BF062F892F50C4F300122488 /* seeicon.icon */,
 				8E0E29E92F4EC7D800C5259F /* SEEiOS */,
 				8E0E29EB2F4EC7D800C5259F /* SEEMac */,
 				8E8F88092F4EC789003D73F1 /* SEE */,
@@ -229,7 +229,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8EF8AE4F2F50404F0094A32D /* Assets.xcassets in Resources */,
-				BF062F882F50C44F00122488 /* seeicon.icon in Resources */,
+				BF062F8A2F50C4F300122488 /* seeicon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
