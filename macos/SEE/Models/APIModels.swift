@@ -171,6 +171,17 @@ struct UsageResponse: Decodable, Sendable {
     let qrcodeCountDayLimit: Int
     let qrcodeCountMonth: Int
     let qrcodeCountMonthLimit: Int
+    let textCountDay: Int
+    let textCountDayLimit: Int
+    let textCountMonth: Int
+    let textCountMonthLimit: Int
+    let uploadCountDay: Int
+    let uploadCountDayLimit: Int
+    let uploadCountMonth: Int
+    let uploadCountMonthLimit: Int
+    let fileCount: Int
+    let storageUsageMb: String
+    let storageUsageLimitMb: String
 
     enum CodingKeys: String, CodingKey {
         case apiCountDay = "api_count_day"
@@ -185,6 +196,17 @@ struct UsageResponse: Decodable, Sendable {
         case qrcodeCountDayLimit = "qrcode_count_day_limit"
         case qrcodeCountMonth = "qrcode_count_month"
         case qrcodeCountMonthLimit = "qrcode_count_month_limit"
+        case textCountDay = "text_count_day"
+        case textCountDayLimit = "text_count_day_limit"
+        case textCountMonth = "text_count_month"
+        case textCountMonthLimit = "text_count_month_limit"
+        case uploadCountDay = "upload_count_day"
+        case uploadCountDayLimit = "upload_count_day_limit"
+        case uploadCountMonth = "upload_count_month"
+        case uploadCountMonthLimit = "upload_count_month_limit"
+        case fileCount = "file_count"
+        case storageUsageMb = "storage_usage_mb"
+        case storageUsageLimitMb = "storage_usage_limit_mb"
     }
 }
 

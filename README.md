@@ -6,20 +6,28 @@ Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, 
 
 | Platform | Status | Directory | Technology |
 |----------|--------|-----------|------------|
+| macOS | ✅ Available | [`macos/`](./macos) | SwiftUI + SwiftData |
+| iOS | ✅ Available | [`macos/`](./macos) | SwiftUI + SwiftData |
 | Linux | ✅ Available | [`linux/`](./linux) | GTK4 + libadwaita + Rust |
-| macOS | 🚧 Coming Soon | `macos/` | - |
 | Windows | 🚧 Coming Soon | `windows/` | - |
 
 ## Features
 
 - **URL Shortening** - Create short links with custom aliases
 - **Text Sharing** - Share code snippets, notes, and text content
-- **File Uploads** - Upload and share files with drag & drop support
+- **File Uploads** - Upload and share files with drag & drop (macOS) or camera/photo picker (iOS)
+- **Batch Operations** - Select multiple files for batch copy links or delete
+- **Local Thumbnails** - Auto-generated file thumbnails via QuickLook
 - **QR Code Generation** - Generate QR codes for any link
 - **Local History** - Track all your created links, texts, and files
 - **Multiple Domains** - Choose from available domains for each service
+- **Menu Bar** - Quick access from macOS menu bar
 
 ## Installation
+
+### macOS / iOS
+
+Open `macos/SEE.xcodeproj` in Xcode and build for your target device. Requires macOS 14+ or iOS 18+.
 
 ### Linux
 

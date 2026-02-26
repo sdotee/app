@@ -51,12 +51,20 @@ macos/
 - `APIClient` is an `actor` with generic `request<T>` and `requestNoBody` methods
 - `#if os(macOS)` / `#if os(iOS)` for platform-specific UI (NSPasteboard vs UIPasteboard, etc.)
 - Image paste upload converts to WebP lossless via [Swift-WebP](https://github.com/ainame/Swift-WebP) library with PNG fallback
-- CDN thumbnail caching via `ThumbnailService` (memory + disk two-level cache)
+- Local thumbnail generation via `QLThumbnailGenerator` (QuickLookThumbnailing) with memory + disk cache
 - `LinkFormatter` generates BBCode, HTML, Markdown embed codes with file type awareness (image/audio/video/other)
 - Pagination (50 items/page) on all list views
 - Local history stored in SwiftData, clearable from Settings
 
-**Build:** Open `macos/SEE.xcodeproj` in Xcode. Requires Swift-WebP SPM dependency (`https://github.com/ainame/Swift-WebP.git`).
+**iOS-specific features:**
+- Camera photo capture with HEIC → JPG conversion
+- Camera video capture with MOV → MP4 conversion (AVFoundation)
+- PhotosPicker integration for photo library access
+- iOS 18+ Tab API for tab navigation
+- `.presentationDetents` for adaptive sheet sizing
+- Batch file selection, copy links, and delete operations
+
+**Build:** Open `macos/SEE.xcodeproj` in Xcode. Requires Swift-WebP SPM dependency (`https://github.com/ainame/Swift-WebP.git`). Supports macOS 14+ and iOS 18+.
 
 ### Linux
 

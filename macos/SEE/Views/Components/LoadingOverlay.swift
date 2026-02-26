@@ -50,6 +50,11 @@ struct ToastModifier: ViewModifier {
                     .padding(.bottom, 20)
                     #endif
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .onTapGesture {
+                        withAnimation {
+                            self.message = nil
+                        }
+                    }
                     .onAppear {
                         Task { @MainActor in
                             try? await Task.sleep(for: .seconds(2.5))

@@ -3,6 +3,7 @@ import SwiftData
 import UniformTypeIdentifiers
 #if os(iOS)
 import PhotosUI
+import AVFoundation
 #endif
 
 enum LinkDisplayType: String, CaseIterable, Identifiable {
@@ -48,8 +49,9 @@ struct FileUploadView: View {
     @State private var viewModel = FileUploadViewModel()
     @State private var showFilePicker = false
     @State private var fileToDelete: UploadedFile?
-    @State private var selectedFileIDs: Set<Int> = []
+    @State private var selectedFileIDs: Set<PersistentIdentifier> = []
     @State private var showBatchLinks = false
+    @State private var showBatchDeleteAlert = false
     @State private var currentPage = 1
     @State private var linkDisplayType: LinkDisplayType = {
         if let saved = UserDefaults.standard.string(forKey: Constants.defaultFileLinkDisplayKey),
@@ -69,16 +71,17 @@ struct FileUploadView: View {
     private var pagedFiles: [UploadedFile] { Pagination.page(files, page: currentPage) }
 
     private var selectedFiles: [UploadedFile] {
-        files.filter { selectedFileIDs.contains($0.fileID) }
+        files.filter { selectedFileIDs.contains($0.persistentModelID) }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // Upload area
             uploadArea
-                .padding()
 
+            #if os(macOS)
             Divider()
+            #endif
 
             // File list
             if files.isEmpty {
@@ -91,19 +94,22 @@ struct FileUploadView: View {
                 List {
                     ForEach(pagedFiles) { file in
                         HStack(spacing: 8) {
-                            Image(systemName: selectedFileIDs.contains(file.fileID) ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(selectedFileIDs.contains(file.fileID) ? Color.accentColor : .secondary.opacity(0.4))
+                            Image(systemName: selectedFileIDs.contains(file.persistentModelID) ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(selectedFileIDs.contains(file.persistentModelID) ? Color.accentColor : .secondary.opacity(0.4))
                                 .font(.body)
-                                .onTapGesture {
-                                    if selectedFileIDs.contains(file.fileID) {
-                                        selectedFileIDs.remove(file.fileID)
-                                    } else {
-                                        selectedFileIDs.insert(file.fileID)
-                                    }
-                                }
 
                             UploadedFileRow(file: file, linkDisplayType: linkDisplayType) {
                                 fileToDelete = file
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                if selectedFileIDs.contains(file.persistentModelID) {
+                                    selectedFileIDs.remove(file.persistentModelID)
+                                } else {
+                                    selectedFileIDs.insert(file.persistentModelID)
+                                }
                             }
                         }
                     }
@@ -116,16 +122,82 @@ struct FileUploadView: View {
                         .listRowSeparator(.hidden)
                     }
                 }
+                #if os(iOS)
+                .contentMargins(.top, 16, for: .scrollContent)
+                #endif
             }
         }
+        #if os(macOS)
+        .dropDestination(for: URL.self) { urls, _ in
+            Task {
+                for url in urls {
+                    guard let data = try? Data(contentsOf: url) else { continue }
+                    let _ = await viewModel.uploadFile(
+                        data: data,
+                        filename: url.lastPathComponent,
+                        context: modelContext
+                    )
+                }
+            }
+            return true
+        }
+        #endif
         .navigationTitle(String(localized: "File Upload"))
         .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Picker(String(localized: "Link Type"), selection: $linkDisplayType) {
-                    ForEach(LinkDisplayType.allCases) { type in
-                        Text(type.rawValue).tag(type)
+            #if os(iOS)
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 4) {
+                    Menu {
+                        ForEach(LinkDisplayType.allCases) { type in
+                            Button(action: { linkDisplayType = type }) {
+                                if linkDisplayType == type {
+                                    Label(type.rawValue, systemImage: "checkmark")
+                                } else {
+                                    Text(type.rawValue)
+                                }
+                            }
+                        }
+                    } label: {
+                        Text(linkDisplayType.rawValue)
+                            .font(.subheadline)
+                            .lineLimit(1)
                     }
+
+                    Button(action: { showBatchLinks = true }) {
+                        Image(systemName: "link.badge.plus")
+                    }
+                    .disabled(selectedFileIDs.isEmpty)
+
+                    Button(action: { showBatchDeleteAlert = true }) {
+                        Image(systemName: "trash")
+                    }
+                    .tint(.red)
+                    .disabled(selectedFileIDs.isEmpty)
                 }
+            }
+            #else
+            ToolbarItem(placement: .automatic) {
+                Menu {
+                    ForEach(LinkDisplayType.allCases) { type in
+                        Button(action: { linkDisplayType = type }) {
+                            if linkDisplayType == type {
+                                Label(type.rawValue, systemImage: "checkmark")
+                            } else {
+                                Text(type.rawValue)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(linkDisplayType.rawValue)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(minWidth: 100)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
             }
             ToolbarItem(placement: .automatic) {
                 Button(action: { showBatchLinks = true }) {
@@ -138,7 +210,13 @@ struct FileUploadView: View {
                 }
                 .disabled(selectedFileIDs.isEmpty)
             }
-            #if os(macOS)
+            ToolbarItem(placement: .automatic) {
+                Button(action: { showBatchDeleteAlert = true }) {
+                    Label(String(localized: "Delete (\(selectedFileIDs.count))"), systemImage: "trash")
+                }
+                .tint(.red)
+                .disabled(selectedFileIDs.isEmpty)
+            }
             ToolbarItem(placement: .automatic) {
                 Button(action: handlePasteUpload) {
                     Label(String(localized: "Paste"), systemImage: "doc.on.clipboard")
@@ -162,6 +240,16 @@ struct FileUploadView: View {
             }
         } message: {
             Text(String(localized: "This will permanently delete the file."))
+        }
+        .alert(String(localized: "Delete \(selectedFileIDs.count) Files?"), isPresented: $showBatchDeleteAlert) {
+            Button(String(localized: "Cancel"), role: .cancel) {}
+            Button(String(localized: "Delete All"), role: .destructive) {
+                Task {
+                    await batchDeleteSelectedFiles()
+                }
+            }
+        } message: {
+            Text(String(localized: "This will permanently delete \(selectedFileIDs.count) selected files. This action cannot be undone."))
         }
         .sheet(isPresented: $showBatchLinks) {
             BatchLinksView(files: selectedFiles, linkDisplayType: linkDisplayType) {
@@ -251,7 +339,6 @@ struct FileUploadView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.secondary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
         #endif
     }
 
@@ -268,6 +355,19 @@ struct FileUploadView: View {
                     context: modelContext
                 )
             }
+        }
+    }
+
+    private func batchDeleteSelectedFiles() async {
+        let filesToDelete = selectedFiles
+        var failCount = 0
+        for file in filesToDelete {
+            let success = await viewModel.deleteFile(file, context: modelContext)
+            if !success { failCount += 1 }
+        }
+        selectedFileIDs.removeAll()
+        if failCount > 0 {
+            viewModel.errorMessage = String(localized: "\(failCount) file(s) failed to delete")
         }
     }
 
@@ -330,17 +430,54 @@ struct FileUploadView: View {
 
     private func handleVideoCapture(_ url: URL) {
         Task {
-            guard let data = try? Data(contentsOf: url) else {
-                viewModel.errorMessage = String(localized: "Failed to read video file")
-                return
-            }
-            let ext = url.pathExtension.isEmpty ? "mov" : url.pathExtension
             let df = DateFormatter()
             df.dateFormat = "yyyyMMdd-HHmmss"
-            let filename = "video-\(df.string(from: .now)).\(ext)"
-            let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
-            // Clean up temp file
+            let timestamp = df.string(from: .now)
+
+            // Convert MOV to MP4 for better compatibility
+            if let mp4URL = await convertToMP4(source: url) {
+                guard let data = try? Data(contentsOf: mp4URL) else {
+                    viewModel.errorMessage = String(localized: "Failed to read video file")
+                    return
+                }
+                let filename = "video-\(timestamp).mp4"
+                let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
+                try? FileManager.default.removeItem(at: mp4URL)
+            } else {
+                // Fallback: upload original file if conversion fails
+                guard let data = try? Data(contentsOf: url) else {
+                    viewModel.errorMessage = String(localized: "Failed to read video file")
+                    return
+                }
+                let ext = url.pathExtension.isEmpty ? "mov" : url.pathExtension
+                let filename = "video-\(timestamp).\(ext)"
+                let _ = await viewModel.uploadFile(data: data, filename: filename, context: modelContext)
+            }
             try? FileManager.default.removeItem(at: url)
+        }
+    }
+
+    /// Convert video to MP4 (H.264) using AVAssetExportSession.
+    private func convertToMP4(source: URL) async -> URL? {
+        let asset = AVURLAsset(url: source)
+        guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
+            return nil
+        }
+
+        let outputURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("mp4")
+
+        session.outputURL = outputURL
+        session.outputFileType = .mp4
+
+        await session.export()
+
+        if session.status == .completed {
+            return outputURL
+        } else {
+            try? FileManager.default.removeItem(at: outputURL)
+            return nil
         }
     }
 
@@ -415,10 +552,24 @@ struct UploadedFileRow: View {
 
     private var sizeInfo: String {
         var parts = [file.size.formattedFileSize]
-        if let w = file.width, let h = file.height {
+        if let w = file.width, let h = file.height, w > 0, h > 0 {
             parts.append("\(w)×\(h)")
         }
+        if let duration = file.duration, duration > 0 {
+            parts.append(formatDuration(duration))
+        }
         return parts.joined(separator: " · ")
+    }
+
+    private func formatDuration(_ seconds: Double) -> String {
+        let totalSeconds = Int(seconds)
+        let h = totalSeconds / 3600
+        let m = (totalSeconds % 3600) / 60
+        let s = totalSeconds % 60
+        if h > 0 {
+            return String(format: "%d:%02d:%02d", h, m, s)
+        }
+        return String(format: "%d:%02d", m, s)
     }
 
     private var displayedLink: String {
@@ -432,14 +583,7 @@ struct UploadedFileRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail
-            if file.isImage {
-                CachedThumbnailView(originalURL: file.url, size: 44)
-            } else {
-                Image(systemName: "doc.fill")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 44, height: 44)
-            }
+            CachedThumbnailView(identifier: file.url, size: 44)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {

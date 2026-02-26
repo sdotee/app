@@ -117,94 +117,271 @@ struct OnboardingView: View {
     @State private var isValidating = false
     @State private var errorMessage: String?
     @State private var showSuccess = false
+    @FocusState private var focusedField: OnboardingField?
+
+    private enum OnboardingField {
+        case baseURL, apiKey
+    }
 
     var body: some View {
+        #if os(macOS)
+        macOSLayout
+        #else
+        iOSLayout
+        #endif
+    }
+
+    // MARK: - macOS Layout
+
+    #if os(macOS)
+    private var macOSLayout: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 32) {
+                // Hero
+                VStack(spacing: 12) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+
+                    Text("S.EE")
+                        .font(.system(size: 28, weight: .bold))
+
+                    Text(String(localized: "URL Shortener, Text Sharing & File Hosting"))
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+
+                // API Token hint
+                VStack(spacing: 6) {
+                    Text(String(localized: "To get started, you need an API Token."))
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                    Link(destination: URL(string: "https://s.ee/user/developers/")!) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.body)
+                            Text(String(localized: "Get your API Token at s.ee"))
+                                .font(.body.weight(.medium))
+                        }
+                    }
+                    .focusEffectDisabled()
+                }
+
+                // Form
+                VStack(spacing: 20) {
+                    Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 16) {
+                        GridRow {
+                            Text(String(localized: "Base URL"))
+                                .font(.body)
+                                .gridColumnAlignment(.trailing)
+                            TextField("https://s.ee/api/v1/", text: $baseURL)
+                                .textFieldStyle(.roundedBorder)
+                                .focused($focusedField, equals: .baseURL)
+                        }
+
+                        GridRow {
+                            Text(String(localized: "API Key"))
+                                .font(.body)
+                                .gridColumnAlignment(.trailing)
+                            HStack(spacing: 8) {
+                                SecureField(String(localized: "Enter your API key"), text: $apiKey)
+                                    .textFieldStyle(.roundedBorder)
+                                    .focused($focusedField, equals: .apiKey)
+                                Button(String(localized: "Paste")) {
+                                    if let clipboard = ClipboardService.getString() {
+                                        apiKey = clipboard
+                                    }
+                                }
+                                .controlSize(.regular)
+                            }
+                        }
+                    }
+
+                    statusMessage
+                }
+                .frame(width: 420)
+
+                // Action
+                Button(action: validate) {
+                    if isValidating {
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(width: 140)
+                    } else {
+                        Text(String(localized: "Verify & Continue"))
+                            .frame(width: 140)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(apiKey.isEmpty || isValidating)
+                .keyboardShortcut(.defaultAction)
+            }
+
+            Spacer()
+        }
+        .frame(minWidth: 560, minHeight: 460)
+        .onSubmit {
+            if focusedField == .baseURL {
+                focusedField = .apiKey
+            } else if focusedField == .apiKey && !apiKey.isEmpty {
+                validate()
+            }
+        }
+        .onAppear { focusedField = .apiKey }
+    }
+    #endif
+
+    // MARK: - iOS Layout
+
+    #if os(iOS)
+    private var iOSLayout: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                Spacer(minLength: 40)
+            VStack(spacing: 32) {
+                Spacer(minLength: 20)
 
-                Image(systemName: "link.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Color.accentColor)
+                // Hero
+                VStack(spacing: 12) {
+                    Image("AppIcon-Display")
+                        .resizable()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .strokeBorder(.quaternary, lineWidth: 0.5)
+                        )
 
-                Text("S.EE")
-                    .font(.largeTitle.bold())
+                    Text("S.EE")
+                        .font(.title.bold())
 
-                Text(String(localized: "URL Shortener, Text Sharing & File Hosting"))
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(String(localized: "URL Shortener, Text Sharing & File Hosting"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
-                VStack(alignment: .leading, spacing: 16) {
+                // API Token hint
+                VStack(spacing: 8) {
+                    Text(String(localized: "To get started, you need an API Token."))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Link(destination: URL(string: "https://s.ee/user/developers/")!) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.subheadline)
+                            Text(String(localized: "Get your API Token at s.ee"))
+                                .font(.subheadline.weight(.medium))
+                        }
+                    }
+                }
+                .multilineTextAlignment(.center)
+
+                // Form
+                VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(String(localized: "Base URL"))
                             .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.secondary)
                         TextField("https://s.ee/api/v1/", text: $baseURL)
                             .textFieldStyle(.roundedBorder)
-                            #if os(iOS)
                             .keyboardType(.URL)
                             .textInputAutocapitalization(.never)
-                            #endif
+                            .autocorrectionDisabled()
+                            .focused($focusedField, equals: .baseURL)
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(String(localized: "API Key"))
                             .font(.subheadline.weight(.medium))
-                        HStack {
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
                             SecureField(String(localized: "Enter your API key"), text: $apiKey)
                                 .textFieldStyle(.roundedBorder)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .focused($focusedField, equals: .apiKey)
                             Button(String(localized: "Paste")) {
                                 if let clipboard = ClipboardService.getString() {
                                     apiKey = clipboard
                                 }
                             }
+                            .buttonStyle(.bordered)
                         }
                     }
 
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-
-                    if showSuccess {
-                        Label(String(localized: "API key verified successfully!"), systemImage: "checkmark.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.green)
-                    }
+                    statusMessage
                 }
-                .frame(maxWidth: 400)
+                .frame(maxWidth: 500)
 
+                // Action
                 Button(action: validate) {
                     if isValidating {
                         ProgressView()
-                            .controlSize(.small)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 20)
                     } else {
                         Text(String(localized: "Verify & Continue"))
+                            .frame(maxWidth: .infinity)
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .disabled(apiKey.isEmpty || isValidating)
-                .keyboardShortcut(.defaultAction)
+                .frame(maxWidth: 500)
 
-                Spacer(minLength: 40)
+                Spacer(minLength: 20)
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 24)
         }
-        #if os(macOS)
-        .frame(minWidth: 500, minHeight: 400)
-        #endif
+        .scrollDismissesKeyboard(.interactively)
+        .onSubmit {
+            if focusedField == .baseURL {
+                focusedField = .apiKey
+            } else if focusedField == .apiKey && !apiKey.isEmpty {
+                validate()
+            }
+        }
     }
+    #endif
+
+    // MARK: - Shared Components
+
+    @ViewBuilder
+    private var statusMessage: some View {
+        if let errorMessage {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+                Text(errorMessage)
+            }
+            .font(.caption)
+            .foregroundStyle(.red)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+
+        if showSuccess {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text(String(localized: "API key verified successfully!"))
+            }
+            .font(.caption)
+            .foregroundStyle(.green)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Validation
 
     private func validate() {
         isValidating = true
         errorMessage = nil
         showSuccess = false
 
-        // Save base URL
         UserDefaults.standard.set(baseURL, forKey: Constants.baseURLKey)
-        // Temporarily save API key for validation
         KeychainService.setAPIKey(apiKey)
 
         Task {

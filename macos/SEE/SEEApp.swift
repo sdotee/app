@@ -18,7 +18,7 @@ struct SEEApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
@@ -46,7 +46,7 @@ struct SEEApp: App {
                 .modelContainer(sharedModelContainer)
         }
 
-        MenuBarExtra("S.EE", systemImage: "link") {
+        MenuBarExtra("S.EE", image: "MenuBarIcon") {
             MenuBarView()
                 .modelContainer(sharedModelContainer)
         }

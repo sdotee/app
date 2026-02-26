@@ -9,6 +9,7 @@ final class UploadedFile {
     var size: Int64
     var width: Int?
     var height: Int?
+    var duration: Double?
     var url: String
     var page: String
     var path: String
@@ -23,6 +24,7 @@ final class UploadedFile {
         size: Int64,
         width: Int? = nil,
         height: Int? = nil,
+        duration: Double? = nil,
         url: String,
         page: String,
         path: String,
@@ -36,6 +38,7 @@ final class UploadedFile {
         self.size = size
         self.width = width
         self.height = height
+        self.duration = duration
         self.url = url
         self.page = page
         self.path = path
@@ -46,6 +49,11 @@ final class UploadedFile {
 
     var isImage: Bool {
         let ext = (filename as NSString).pathExtension.lowercased()
-        return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic"].contains(ext)
+        return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "avif"].contains(ext)
+    }
+
+    var isVideo: Bool {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        return ["mp4", "mov", "m4v", "avi", "mkv", "webm", "3gp"].contains(ext)
     }
 }

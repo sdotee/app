@@ -10,7 +10,7 @@ enum LinkFormatter {
 
     static func category(for filename: String) -> FileCategory {
         let ext = (filename as NSString).pathExtension.lowercased()
-        if ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "ico", "tiff"].contains(ext) {
+        if ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "avif", "ico", "tiff"].contains(ext) {
             return .image
         }
         if ["mp3", "wav", "flac", "aac", "ogg", "m4a", "wma"].contains(ext) {
