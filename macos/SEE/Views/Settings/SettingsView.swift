@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Binding var hasAPIKey: Bool
     @State private var baseURL = UserDefaults.standard.string(forKey: Constants.baseURLKey) ?? Constants.defaultBaseURL
     @State private var apiKey = KeychainService.getAPIKey() ?? ""
+    @State private var showAPIKey = false
     @State private var isValidating = false
     @State private var validationResult: ValidationResult?
     @State private var shortLinkDomains: [String] = []
@@ -49,19 +50,43 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "Base URL"))
                         .font(.subheadline.weight(.medium))
-                    TextField("https://s.ee/api/v1/", text: $baseURL)
+                    TextField("", text: $baseURL, prompt: Text("https://s.ee/api/v1/"))
                         .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: 420, alignment: .leading)
                         .onChange(of: baseURL) {
                             UserDefaults.standard.set(baseURL, forKey: Constants.baseURLKey)
                         }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "API Key"))
                         .font(.subheadline.weight(.medium))
-                    SecureField(String(localized: "Enter your API key"), text: $apiKey)
+                    HStack(spacing: 6) {
+                        Group {
+                            if showAPIKey {
+                                TextField("", text: $apiKey)
+                            } else {
+                                SecureField("", text: $apiKey)
+                            }
+                        }
                         .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: 420, alignment: .leading)
+
+                        Button {
+                            showAPIKey.toggle()
+                        } label: {
+                            Image(systemName: showAPIKey ? "eye.slash" : "eye")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     HStack(spacing: 8) {
                         Button(String(localized: "Paste from Clipboard")) {
                             if let clipboard = ClipboardService.getString() {
@@ -83,6 +108,7 @@ struct SettingsView: View {
                         Spacer()
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 4)
                 #else
                 TextField(String(localized: "Base URL"), text: $baseURL)
@@ -216,6 +242,64 @@ struct SettingsView: View {
                 Text(String(localized: "About"))
             }
 
+            #if os(macOS)
+            Section {
+            } header: {
+                Text(String(localized: "Cache"))
+            } footer: {
+                VStack(alignment: .leading, spacing: 0) {
+                    Button(action: clearThumbnailCache) {
+                        HStack(spacing: 8) {
+                            Text(String(localized: "Clear Thumbnail Cache"))
+                            if isClearingCache {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else if cacheCleared {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.green)
+                            }
+                        }
+                    }
+                    .disabled(isClearingCache)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.body)
+                .foregroundStyle(.primary)
+            }
+
+            Section {
+            } header: {
+                Text(String(localized: "Data"))
+            } footer: {
+                VStack(alignment: .leading, spacing: 8) {
+                    Button(action: { showClearHistoryAlert = true }) {
+                        Text(String(localized: "Clear Local History"))
+                    }
+
+                    Text(String(localized: "Local history only stores records on this device."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.body)
+                .foregroundStyle(.primary)
+            }
+
+            Section {
+            } header: {
+                Text(String(localized: "Account"))
+            } footer: {
+                VStack(alignment: .leading, spacing: 0) {
+                    Button(String(localized: "Sign Out")) {
+                        KeychainService.setAPIKey(nil)
+                        hasAPIKey = false
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.body)
+                .foregroundStyle(.primary)
+            }
+            #else
             Section {
                 Button(action: clearThumbnailCache) {
                     HStack {
@@ -253,6 +337,7 @@ struct SettingsView: View {
                     hasAPIKey = false
                 }
             }
+            #endif
         }
         .formStyle(.grouped)
         .navigationTitle(String(localized: "Settings"))

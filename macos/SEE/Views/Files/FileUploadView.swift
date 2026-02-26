@@ -79,10 +79,6 @@ struct FileUploadView: View {
             // Upload area
             uploadArea
 
-            #if os(macOS)
-            Divider()
-            #endif
-
             // File list
             if files.isEmpty {
                 EmptyStateView(
@@ -524,14 +520,15 @@ struct DropZoneView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(maxWidth: .infinity)
         .frame(height: 120)
+        .frame(maxWidth: 560)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(style: StrokeStyle(lineWidth: 2, dash: [8]))
                 .foregroundStyle(isTargeted ? Color.accentColor : .secondary.opacity(0.3))
         )
         .background(isTargeted ? Color.accentColor.opacity(0.05) : Color.clear, in: RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity, alignment: .center)
         .onTapGesture { onTap() }
         .dropDestination(for: URL.self) { urls, _ in
             onDrop(urls)
