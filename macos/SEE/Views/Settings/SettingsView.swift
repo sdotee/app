@@ -126,6 +126,16 @@ struct SettingsView: View {
                             .foregroundStyle(.red)
                     }
                 }
+
+                Link(destination: URL(string: "https://s.ee/user/developers/")!) {
+                    HStack {
+                        Label(String(localized: "Get your API Token"), systemImage: "key.fill")
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } header: {
                 Text(String(localized: "API Configuration"))
             }
@@ -210,6 +220,30 @@ struct SettingsView: View {
                     LabeledContent(String(localized: "Website")) {
                         Text("s.ee")
                             .foregroundStyle(Color.accentColor)
+                    }
+                }
+
+                Link(destination: URL(string: "https://s.ee/privacy/")!) {
+                    LabeledContent(String(localized: "Privacy Policy")) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Link(destination: URL(string: "https://s.ee/terms/")!) {
+                    LabeledContent(String(localized: "Terms of Service")) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Link(destination: URL(string: "https://s.ee/aup/")!) {
+                    LabeledContent(String(localized: "Acceptable Use Policy")) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             } header: {

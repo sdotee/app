@@ -376,6 +376,26 @@ struct OnboardingView: View {
 
     // MARK: - Validation
 
+    private func loadDefaultDomains() async {
+        if let response: APIResponse<DomainsResponse> = try? await APIClient.shared.request(.getDomains),
+           let first = response.data?.domains.first,
+           UserDefaults.standard.string(forKey: Constants.defaultShortLinkDomainKey)?.isEmpty != false {
+            UserDefaults.standard.set(first, forKey: Constants.defaultShortLinkDomainKey)
+        }
+
+        if let response: APIResponse<DomainsResponse> = try? await APIClient.shared.request(.getTextDomains),
+           let first = response.data?.domains.first,
+           UserDefaults.standard.string(forKey: Constants.defaultTextDomainKey)?.isEmpty != false {
+            UserDefaults.standard.set(first, forKey: Constants.defaultTextDomainKey)
+        }
+
+        if let response: APIResponse<DomainsResponse> = try? await APIClient.shared.request(.getFileDomains),
+           let first = response.data?.domains.first,
+           UserDefaults.standard.string(forKey: Constants.defaultFileDomainKey)?.isEmpty != false {
+            UserDefaults.standard.set(first, forKey: Constants.defaultFileDomainKey)
+        }
+    }
+
     private func validate() {
         isValidating = true
         errorMessage = nil
@@ -387,6 +407,7 @@ struct OnboardingView: View {
         Task {
             do {
                 let _ = try await APIClient.shared.validateAPIKey()
+                await loadDefaultDomains()
                 showSuccess = true
                 try? await Task.sleep(for: .seconds(0.5))
                 hasAPIKey = true

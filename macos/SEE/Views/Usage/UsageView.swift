@@ -211,10 +211,8 @@ struct UsageCard: View {
                     Text(limitText(dayCount, dayLimit))
                         .font(.caption.monospacedDigit())
                 }
-                if !isUnlimitedDay {
-                    ProgressView(value: dayProgress)
-                        .tint(dayProgress > 0.9 ? .red : dayProgress > 0.7 ? .orange : .accentColor)
-                }
+                ProgressView(value: isUnlimitedDay ? 0 : dayProgress)
+                    .tint(isUnlimitedDay ? .secondary.opacity(0.3) : dayProgress > 0.9 ? .red : dayProgress > 0.7 ? .orange : .accentColor)
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -226,10 +224,8 @@ struct UsageCard: View {
                     Text(limitText(monthCount, monthLimit))
                         .font(.caption.monospacedDigit())
                 }
-                if !isUnlimitedMonth {
-                    ProgressView(value: monthProgress)
-                        .tint(monthProgress > 0.9 ? .red : monthProgress > 0.7 ? .orange : .accentColor)
-                }
+                ProgressView(value: isUnlimitedMonth ? 0 : monthProgress)
+                    .tint(isUnlimitedMonth ? .secondary.opacity(0.3) : monthProgress > 0.9 ? .red : monthProgress > 0.7 ? .orange : .accentColor)
             }
         }
         .padding()
