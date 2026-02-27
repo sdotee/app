@@ -8,6 +8,7 @@ Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, 
 |----------|--------|-----------|------------|
 | macOS | ✅ Available | [`macos/`](./macos) | SwiftUI + SwiftData |
 | iOS | ✅ Available | [`macos/`](./macos) | SwiftUI + SwiftData |
+| Android | ✅ Available | [`android/`](./android) | Jetpack Compose + Material 3 |
 | Linux | ✅ Available | [`linux/`](./linux) | GTK4 + libadwaita + Rust |
 | Windows | 🚧 Coming Soon | `windows/` | - |
 
@@ -15,9 +16,9 @@ Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, 
 
 - **URL Shortening** - Create short links with custom aliases
 - **Text Sharing** - Share code snippets, notes, and text content
-- **File Uploads** - Upload and share files with drag & drop (macOS) or camera/photo picker (iOS)
-- **Batch Operations** - Select multiple files for batch copy links or delete
-- **Local Thumbnails** - Auto-generated file thumbnails via QuickLook
+- **File Uploads** - Upload and share files with drag & drop (macOS), camera/photo picker (iOS/Android)
+- **Batch Operations** - Select multiple items for batch copy links or batch delete
+- **Local Thumbnails** - Auto-generated file thumbnails via QuickLook (macOS/iOS) or Coil (Android)
 - **QR Code Generation** - Generate QR codes for any link
 - **Local History** - Track all your created links, texts, and files
 - **Multiple Domains** - Choose from available domains for each service
@@ -28,6 +29,12 @@ Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, 
 ### macOS / iOS
 
 Open `macos/SEE.xcodeproj` in Xcode and build for your target device. Requires macOS 14+ or iOS 18+.
+
+### Android
+
+Open `android/` in Android Studio and build for your target device. Requires Android 10+ (API 29).
+
+See [android/README.md](./android/README.md) for more details.
 
 ### Linux
 

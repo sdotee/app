@@ -10,6 +10,7 @@ S.EE Desktop is a collection of native desktop clients for the S.EE URL shorteni
 
 ```
 desktop/
+├── android/        # Jetpack Compose + Material 3 (Android)
 ├── linux/          # GTK4 + libadwaita + Rust
 ├── macos/          # SwiftUI + SwiftData (macOS & iOS)
 ├── windows/        # Coming soon
@@ -65,6 +66,66 @@ macos/
 - Batch file selection, copy links, and delete operations
 
 **Build:** Open `macos/SEE.xcodeproj` in Xcode. Requires Swift-WebP SPM dependency (`https://github.com/ainame/Swift-WebP.git`). Supports macOS 14+ and iOS 18+.
+
+### Android
+
+Native Android app built with Jetpack Compose and Material 3. Uses Room for local history, EncryptedSharedPreferences for API key storage, and Hilt for dependency injection.
+
+**Project structure:**
+```
+android/
+├── app/
+│   └── src/main/java/s/how/see/
+│       ├── SEEApplication.kt              # Hilt application entry point
+│       ├── MainActivity.kt                # Single-activity Compose host
+│       ├── data/
+│       │   ├── remote/
+│       │   │   ├── api/SEEApiService.kt   # Retrofit API interface
+│       │   │   ├── api/AuthInterceptor.kt # OkHttp auth header injection
+│       │   │   ├── DynamicBaseUrlInterceptor.kt # Runtime base URL switching
+│       │   │   ├── ProgressRequestBody.kt # Upload progress tracking
+│       │   │   └── model/                 # Request/response DTOs (kotlinx.serialization)
+│       │   ├── local/
+│       │   │   ├── db/                    # Room database, DAOs, entities
+│       │   │   └── preferences/           # DataStore + EncryptedSharedPreferences
+│       │   └── repository/                # Repository layer (5 repositories)
+│       ├── di/                            # Hilt modules (App, Network, Database)
+│       ├── ui/
+│       │   ├── navigation/               # Navigation Compose routes + bottom nav
+│       │   ├── theme/                     # Material 3 theme + dynamic color
+│       │   ├── shortlinks/               # Short URL CRUD + stats
+│       │   ├── textsharing/              # Text sharing CRUD
+│       │   ├── files/                    # File upload + management
+│       │   ├── tags/                     # Tag list
+│       │   ├── usage/                    # Usage dashboard
+│       │   ├── settings/                 # App preferences
+│       │   └── components/               # Reusable composables
+│       ├── util/                          # ClipboardUtil, DateTimeUtil, LinkFormatter, UrlValidator
+│       └── widget/                        # Glance widget
+├── gradle/libs.versions.toml             # Version catalog
+└── build.gradle.kts
+```
+
+**Key architecture:**
+- MVVM with `ViewModel` + `StateFlow` + `collectAsStateWithLifecycle`
+- Retrofit 3.0 + OkHttp 5 with `DynamicBaseUrlInterceptor` for runtime base URL switching
+- `AuthInterceptor` auto-injects API key from `EncryptedSharedPreferences`
+- kotlinx.serialization for JSON parsing
+- Room database for local history (links, text shares, uploaded files)
+- `LinkFormatter` with 9 display types (Direct Link, BBCode, HTML, Markdown, etc.)
+- Pagination (50 items/page) on all list views
+- Batch selection with long-press or toolbar button, batch copy links and sequential batch delete
+- Adaptive icons with gradient background, white star foreground, and monochrome layer
+
+**Build:**
+```bash
+cd android
+./gradlew assembleDebug      # Debug build
+./gradlew assembleRelease    # Release build
+./gradlew installDebug       # Install on connected device
+```
+
+Requires Android SDK with API 36. Minimum deployment target is API 29 (Android 10).
 
 ### Linux
 

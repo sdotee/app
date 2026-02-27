@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="shorten_url"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_link"
+        android:shortcutShortLabel="@string/shortcut_shorten_url"
+        android:shortcutLongLabel="@string/shortcut_shorten_url">
+        <intent
+            android:action="s.how.see.ACTION_SHORTEN_URL"
+            android:targetPackage="s.how.see"
+            android:targetClass="s.how.see.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_text"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_text"
+        android:shortcutShortLabel="@string/shortcut_new_text"
+        android:shortcutLongLabel="@string/shortcut_new_text">
+        <intent
+            android:action="s.how.see.ACTION_NEW_TEXT"
+            android:targetPackage="s.how.see"
+            android:targetClass="s.how.see.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="upload_file"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_upload"
+        android:shortcutShortLabel="@string/shortcut_upload_file"
+        android:shortcutLongLabel="@string/shortcut_upload_file">
+        <intent
+            android:action="s.how.see.ACTION_UPLOAD_FILE"
+            android:targetPackage="s.how.see"
+            android:targetClass="s.how.see.MainActivity" />
+    </shortcut>
+</shortcuts>

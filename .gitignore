@@ -25,3 +25,20 @@ xcuserdata/
 DerivedData/
 .build/
 .swiftpm/
+
+# ---> Android / Gradle
+*.iml
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+*.jks
+*.keystore
