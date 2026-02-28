@@ -180,7 +180,7 @@ impl SeeApplication {
             .developer_name("S.EE Team")
             .version(env!("CARGO_PKG_VERSION"))
             .website("https://s.ee")
-            .issue_url("https://github.com/sdotee/desktop/issues")
+            .issue_url("https://github.com/sdotee/app/issues")
             .license_type(gtk::License::MitX11)
             .developers(vec!["S.EE Team"])
             .copyright("© 2026 S.EE")

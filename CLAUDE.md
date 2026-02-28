@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-S.EE Desktop is a collection of native desktop clients for the S.EE URL shortening, text sharing, and file hosting service. This is a monorepo with platform-specific implementations in separate directories.
+S.EE App is a collection of native clients for the S.EE URL shortening, text sharing, and file hosting service. This monorepo contains apps for desktop, mobile, and tablet platforms, with platform-specific implementations in separate directories.
 
 ## Repository Structure
 
 ```
-desktop/
+app/
 ├── android/        # Jetpack Compose + Material 3 (Android)
 ├── linux/          # GTK4 + libadwaita + Rust
 ├── macos/          # SwiftUI + SwiftData (macOS & iOS)

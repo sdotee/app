@@ -38,38 +38,38 @@ yay -S see-desktop
 
 ### Ubuntu/Debian (.deb)
 
-Download from [Releases](https://github.com/sdotee/desktop/releases):
+Download from [Releases](https://github.com/sdotee/app/releases):
 
 ```bash
 # x86_64
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see_0.1.0_amd64.deb
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see_0.1.0_amd64.deb
 sudo apt install ./see_0.1.0_amd64.deb
 
 # ARM64
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see_0.1.0_arm64.deb
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see_0.1.0_arm64.deb
 sudo apt install ./see_0.1.0_arm64.deb
 ```
 
 ### Fedora (.rpm)
 
-Download from [Releases](https://github.com/sdotee/desktop/releases):
+Download from [Releases](https://github.com/sdotee/app/releases):
 
 ```bash
 # x86_64
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see-0.1.0-1.x86_64.rpm
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see-0.1.0-1.x86_64.rpm
 sudo dnf install ./see-0.1.0-1.x86_64.rpm
 
 # ARM64
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see-0.1.0-1.aarch64.rpm
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see-0.1.0-1.aarch64.rpm
 sudo dnf install ./see-0.1.0-1.aarch64.rpm
 ```
 
 ### Flatpak
 
-Download from [Releases](https://github.com/sdotee/desktop/releases):
+Download from [Releases](https://github.com/sdotee/app/releases):
 
 ```bash
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see-0.1.0-x86_64.flatpak
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see-0.1.0-x86_64.flatpak
 flatpak install ./see-0.1.0-x86_64.flatpak
 ```
 
@@ -101,7 +101,7 @@ sudo dnf install gtk4-devel libadwaita-devel cairo-devel pango-devel openssl-dev
 #### Build
 
 ```bash
-git clone https://github.com/sdotee/desktop.git
+git clone https://github.com/sdotee/app.git
 cd desktop/linux
 cargo build --release
 ./target/release/see
@@ -241,7 +241,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Links
 
 - **Website**: [s.ee](https://s.ee)
-- **Issues**: [GitHub Issues](https://github.com/sdotee/desktop/issues)
+- **Issues**: [GitHub Issues](https://github.com/sdotee/app/issues)
 - **API Documentation**: [S.EE API Docs](https://s.ee/docs/developers/api/)
 
 ## Credits

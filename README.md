@@ -1,6 +1,6 @@
-# S.EE Desktop
+# S.EE
 
-Native desktop clients for [S.EE](https://s.ee) - URL shortening, text sharing, and file hosting service.
+Native apps for [S.EE](https://s.ee) - URL shortening, text sharing, and file hosting service.
 
 ## Platforms
 
@@ -45,19 +45,19 @@ yay -S see-desktop-bin
 
 **Ubuntu/Debian:**
 ```bash
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see_0.1.0_amd64.deb
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see_0.1.0_amd64.deb
 sudo apt install ./see_0.1.0_amd64.deb
 ```
 
 **Fedora:**
 ```bash
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see-0.1.0-1.x86_64.rpm
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see-0.1.0-1.x86_64.rpm
 sudo dnf install ./see-0.1.0-1.x86_64.rpm
 ```
 
 **Flatpak:**
 ```bash
-wget https://github.com/sdotee/desktop/releases/download/v0.1.0/see-0.1.0-x86_64.flatpak
+wget https://github.com/sdotee/app/releases/download/v0.1.0/see-0.1.0-x86_64.flatpak
 flatpak install ./see-0.1.0-x86_64.flatpak
 ```
 
@@ -78,4 +78,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Website**: [s.ee](https://s.ee)
 - **API Documentation**: [S.EE API Docs](https://s.ee/docs/developers/api/)
-- **Issues**: [GitHub Issues](https://github.com/sdotee/desktop/issues)
+- **Issues**: [GitHub Issues](https://github.com/sdotee/app/issues)
