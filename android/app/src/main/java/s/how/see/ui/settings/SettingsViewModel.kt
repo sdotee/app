@@ -162,6 +162,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun signOut() {
+        viewModelScope.launch {
+            secureStorage.clearApiKey()
+            shortLinkRepository.clearLocalHistory()
+            textShareRepository.clearLocalHistory()
+            fileRepository.clearLocalHistory()
+            appPreferences.clearDomainPreferences()
+            hasApiKey.value = false
+            _linkDomains.value = emptyList()
+            _textDomains.value = emptyList()
+            _fileDomains.value = emptyList()
+        }
+    }
+
     sealed class ValidationState {
         data object Idle : ValidationState()
         data object Validating : ValidationState()

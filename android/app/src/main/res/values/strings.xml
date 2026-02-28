@@ -39,6 +39,15 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
     <string name="acceptable_use_policy">Acceptable Use Policy</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="sign_out_confirm">This will clear your API key, all local history, and domain preferences. Continue?</string>
+    <string name="welcome_title">Welcome to S.EE</string>
+    <string name="welcome_desc">To get started, you need an API Token.</string>
+    <string name="get_api_token">Get your API Token</string>
+    <string name="get_api_token_at_see">Get your API Token at s.ee</string>
+    <string name="onboarding_subtitle">URL Shortener, Text &amp; File Sharing</string>
+    <string name="onboarding_loading_domains">Verified! Setting up defaults…</string>
+    <string name="verify_and_continue">Verify &amp; Continue</string>
 
     <!-- Short Links -->
     <string name="short_links">Short Links</string>

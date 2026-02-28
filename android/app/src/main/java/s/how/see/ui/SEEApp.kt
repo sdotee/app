@@ -11,7 +11,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -26,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import s.how.see.ui.navigation.SEENavHost
 import s.how.see.ui.navigation.TopLevelDestination
+import s.how.see.ui.onboarding.OnboardingScreen
 import s.how.see.ui.settings.SettingsViewModel
 import s.how.see.ui.theme.SEETheme
 import s.how.see.ui.theme.ThemeMode
@@ -36,9 +36,6 @@ fun SEEApp(
     intent: Intent?,
     settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val navController = rememberNavController()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val hasApiKey by settingsViewModel.hasApiKey.collectAsStateWithLifecycle()
 
     val themeModeStr by settingsViewModel.themeMode.collectAsStateWithLifecycle()
@@ -49,13 +46,31 @@ fun SEEApp(
         else -> ThemeMode.SYSTEM
     }
 
-    LaunchedEffect(hasApiKey) {
-        if (!hasApiKey) {
-            navController.navigate("settings") {
-                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-            }
+    if (hasApiKey) {
+        SEETheme(themeMode = themeMode, dynamicColor = dynamicColor) {
+            MainContent(
+                settingsViewModel = settingsViewModel,
+                onSignedOut = { settingsViewModel.hasApiKey.value = false },
+            )
+        }
+    } else {
+        // Onboarding uses non-dynamic theme for guaranteed contrast
+        SEETheme(themeMode = themeMode, dynamicColor = false) {
+            OnboardingScreen(
+                onComplete = { settingsViewModel.hasApiKey.value = true },
+            )
         }
     }
+}
+
+@Composable
+private fun MainContent(
+    settingsViewModel: SettingsViewModel,
+    onSignedOut: () -> Unit,
+) {
+    val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -63,47 +78,46 @@ fun SEEApp(
     val topLevelRoutes = TopLevelDestination.entries.map { it.route }
     val showBottomBar = currentDestination?.route in topLevelRoutes
 
-    SEETheme(themeMode = themeMode, dynamicColor = dynamicColor) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                if (showBottomBar) {
-                    NavigationBar {
-                        TopLevelDestination.entries.forEach { destination ->
-                            val selected = currentDestination?.hierarchy?.any {
-                                it.route == destination.route
-                            } == true
-                            NavigationBarItem(
-                                icon = {
-                                    Icon(
-                                        if (selected) destination.selectedIcon else destination.unselectedIcon,
-                                        contentDescription = null,
-                                    )
-                                },
-                                label = { Text(stringResource(destination.labelResId)) },
-                                selected = selected,
-                                onClick = {
-                                    navController.navigate(destination.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            if (showBottomBar) {
+                NavigationBar {
+                    TopLevelDestination.entries.forEach { destination ->
+                        val selected = currentDestination?.hierarchy?.any {
+                            it.route == destination.route
+                        } == true
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    if (selected) destination.selectedIcon else destination.unselectedIcon,
+                                    contentDescription = null,
+                                )
+                            },
+                            label = { Text(stringResource(destination.labelResId)) },
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
                                     }
-                                },
-                            )
-                        }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                        )
                     }
                 }
+            }
+        },
+    ) { innerPadding ->
+        SEENavHost(
+            navController = navController,
+            onShowSnackbar = { message ->
+                scope.launch { snackbarHostState.showSnackbar(message) }
             },
-        ) { innerPadding ->
-            SEENavHost(
-                navController = navController,
-                onShowSnackbar = { message ->
-                    scope.launch { snackbarHostState.showSnackbar(message) }
-                },
-                modifier = Modifier.padding(innerPadding),
-            )
-        }
+            onSignedOut = onSignedOut,
+            modifier = Modifier.padding(innerPadding),
+        )
     }
 }

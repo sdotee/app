@@ -16,6 +16,7 @@ import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -67,6 +68,7 @@ import s.how.see.util.LinkDisplayType
 fun SettingsScreen(
     onBack: () -> Unit,
     onShowSnackbar: (String) -> Unit,
+    onSignedOut: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val baseUrl by viewModel.baseUrl.collectAsStateWithLifecycle()
@@ -86,7 +88,9 @@ fun SettingsScreen(
     var apiKeyInput by rememberSaveable { mutableStateOf(viewModel.getApiKey()) }
     var showPassword by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
+    var showSignOutDialog by remember { mutableStateOf(false) }
     val clipboardManager = context.getSystemService(android.content.ClipboardManager::class.java)
+    val hasApiKey by viewModel.hasApiKey.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadDomains() }
 
@@ -98,6 +102,27 @@ fun SettingsScreen(
                 onShowSnackbar((validationState as SettingsViewModel.ValidationState.Invalid).message)
             else -> {}
         }
+    }
+
+    if (showSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { showSignOutDialog = false },
+            title = { Text(stringResource(R.string.sign_out)) },
+            text = { Text(stringResource(R.string.sign_out_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.signOut()
+                    showSignOutDialog = false
+                    apiKeyInput = ""
+                    onSignedOut()
+                }) { Text(stringResource(R.string.sign_out)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 
     if (showClearDialog) {
@@ -300,6 +325,20 @@ fun SettingsScreen(
                 onClick = { showClearDialog = true },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.clear_history)) }
+
+            // Sign Out
+            if (hasApiKey) {
+                Button(
+                    onClick = { showSignOutDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.sign_out))
+                }
+            }
 
             // About
             HorizontalDivider()

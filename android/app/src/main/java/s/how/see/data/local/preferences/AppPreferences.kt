@@ -75,6 +75,14 @@ class AppPreferences @Inject constructor(
         context.dataStore.edit { it[KEY_FILE_LINK_DISPLAY_TYPE] = type }
     }
 
+    suspend fun clearDomainPreferences() {
+        context.dataStore.edit {
+            it.remove(KEY_DEFAULT_LINK_DOMAIN)
+            it.remove(KEY_DEFAULT_TEXT_DOMAIN)
+            it.remove(KEY_DEFAULT_FILE_DOMAIN)
+        }
+    }
+
     companion object {
         const val DEFAULT_BASE_URL = "https://s.ee/api/v1/"
 

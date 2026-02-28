@@ -20,6 +20,7 @@ import s.how.see.ui.usage.UsageScreen
 fun SEENavHost(
     navController: NavHostController,
     onShowSnackbar: (String) -> Unit,
+    onSignedOut: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -118,6 +119,7 @@ fun SEENavHost(
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onShowSnackbar = onShowSnackbar,
+                onSignedOut = onSignedOut,
             )
         }
     }
